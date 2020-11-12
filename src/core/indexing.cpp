@@ -235,7 +235,13 @@ FFMS_Indexer *CreateIndexer(const char *Filename) {
 FFMS_Indexer::FFMS_Indexer(const char *Filename)
     : SourceFile(Filename) {
     try {
-        if (avformat_open_input(&FormatContext, Filename, nullptr, nullptr) != 0)
+        AVDictionary *opts = nullptr;
+
+        if (av_dict_set(&opts, "use_mfra_for", "pts", 0) < 0) {
+            throw FFMS_Exception(FFMS_ERROR_PARSER, FFMS_ERROR_ALLOCATION_FAILED,
+                std::string("Couldn't set use_mfra_for AVOption"));
+        }
+        if (avformat_open_input(&FormatContext, Filename, nullptr, &opts) != 0)
             throw FFMS_Exception(FFMS_ERROR_PARSER, FFMS_ERROR_FILE_READ,
                 std::string("Can't open '") + Filename + "'");
 
