@@ -27,6 +27,7 @@
 
 enum AVPixelFormat; // predeclare this - to use it in the below prototypes
 
+#ifdef _WIN32
 typedef struct ffms_avs_lib_t
 {
     void *library;
@@ -79,5 +80,6 @@ typedef struct ffms_avs_lib_t
 extern       ffms_avs_lib_t ffms_avs_lib;
 int          ffms_load_avs_lib( AVS_ScriptEnvironment *env );
 void AVSC_CC ffms_free_avs_lib( void *user_data, AVS_ScriptEnvironment *env );
+#endif
 
 #endif

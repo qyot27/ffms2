@@ -20,6 +20,8 @@
 
 #include "avs_common.h"
 #include "ff_filters.h"
+#include <stdlib.h>
+#include <string.h>
 
 typedef struct
 {
@@ -45,7 +47,7 @@ static int AVSC_CC get_parity( AVS_FilterInfo *fi, int n )
     return 0;
 }
 
-static int AVSC_CC get_audio( AVS_FilterInfo *fi, void *buf, INT64 start, INT64 count )
+static int AVSC_CC get_audio( AVS_FilterInfo *fi, void *buf, int64_t start, int64_t count )
 {
     ffaudiosource_filter_t *filter = fi->user_data;
     init_ErrorInfo( ei );
@@ -67,7 +69,11 @@ AVS_Value FFAudioSource_create( AVS_ScriptEnvironment *env, const char *src, int
     if( !filter )
         return avs_void;
 
+#ifdef _WIN32
     AVS_Clip *clip = ffms_avs_lib.avs_new_c_filter( env, &filter->fi, avs_void, 0 );
+#else
+    AVS_Clip *clip = avs_new_c_filter( env, &filter->fi, avs_void, 0 );
+#endif
     if( !clip )
     {
         filter = NULL;
@@ -89,8 +95,13 @@ AVS_Value FFAudioSource_create( AVS_ScriptEnvironment *env, const char *src, int
 
     char buf[512] = {0};
     ffms_avs_sprintf2( buf, sizeof(buf), "%sFFCHANNEL_LAYOUT", var_prefix );
+#ifdef _WIN32
     ffms_avs_lib.avs_set_var( env, buf, avs_new_value_int( (int)audp->ChannelLayout ) );
     ffms_avs_lib.avs_set_global_var( env, "FFVAR_PREFIX", avs_new_value_string( var_prefix ) );
+#else
+    avs_set_var( env, buf, avs_new_value_int( (int)audp->ChannelLayout ) );
+    avs_set_global_var( env, "FFVAR_PREFIX", avs_new_value_string( var_prefix ) );
+#endif
 
     switch( audp->SampleFormat )
     {

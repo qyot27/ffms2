@@ -23,13 +23,19 @@
 
 #include "avs_common.h"
 
+AVS_ScriptEnvironment *env;
+
 /* conversion driver mimicking the automatic casting and converting the C++ version has */
 
 static inline char as_bool( AVS_Value val, char def )
 { return avs_is_bool( val ) ? !!avs_as_bool( val ) : !!def; };
 
 static inline AVS_Clip *as_clip( AVS_Value val )
+#ifdef _WIN32
 { return avs_is_clip( val ) ? ffms_avs_lib.avs_take_clip( val, ffms_avs_lib.env ) : NULL; }
+#else
+{ return avs_is_clip( val ) ? avs_take_clip( val, env ) : NULL; }
+#endif
 
 static inline AVS_Value as_elt( AVS_Value val, int elt )
 { return elt < avs_array_size( val ) ? avs_array_elt( val, elt ) : avs_void; }
@@ -44,6 +50,10 @@ static inline const char *as_string( AVS_Value val, const char *def )
 { return avs_is_string( val ) ? avs_as_string( val ) : def; };
 
 static inline AVS_Value clip_val( AVS_Clip *clip )
+#ifdef _WIN32
 { AVS_Value v; ffms_avs_lib.avs_set_to_clip( &v, clip ); return v; }
+#else
+{ AVS_Value v; avs_set_to_clip( &v, clip ); return v; }
+#endif
 
 #endif

@@ -26,6 +26,7 @@
 #include <malloc.h>
 #include "avs_common.h"
 
+#ifdef _WIN32
 ffms_avs_lib_t ffms_avs_lib;
 static volatile LONG ref = 0;
 
@@ -39,7 +40,7 @@ int ffms_load_avs_lib( AVS_ScriptEnvironment *env )
 
 #define LOAD_AVS_FUNC(name, continue_on_fail)                  \
     ffms_avs_lib.name =                                        \
-         (void *)GetProcAddress(ffms_avs_lib.library, #name ); \
+         (void *)dlsym(ffms_avs_lib.library, #name ); \
     if( !continue_on_fail && !ffms_avs_lib.name )              \
         goto fail;
     OutputDebugString( "FFMS2 avs plugin: Initializing..." );
@@ -101,3 +102,4 @@ void AVSC_CC ffms_free_avs_lib( void *user_data, AVS_ScriptEnvironment *env )
         free( ffms_avs_lib.library );
     }
 }
+#endif

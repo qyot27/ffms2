@@ -21,6 +21,11 @@
 #include "ffms.h"
 #include "avs_common.h"
 #include "ff_filters.h"
+#include <string.h>
+
+#ifndef _WIN32
+#define stricmp strcasecmp
+#endif
 
 #define MAX_CACHE_FILE_LENGTH 512 // Windows API should explode before getting this long
 
@@ -42,9 +47,11 @@ static int default_cache_file( const char *src, const char *user_cache_file, cha
 
 static int get_num_logical_cpus()
 {
+#ifdef _WIN32
     SYSTEM_INFO SI;
     GetSystemInfo( &SI );
     return SI.dwNumberOfProcessors;
+#endif
 }
 
 static AVS_Value AVSC_CC create_FFIndex( AVS_ScriptEnvironment *env, AVS_Value args, void *user_data )
@@ -316,6 +323,7 @@ static AVS_Value AVSC_CC create_FFGetVersion( AVS_ScriptEnvironment *env, AVS_Va
 /* the AVS loader for LoadCPlugin */
 const char *AVSC_CC avisynth_c_plugin_init( AVS_ScriptEnvironment* env )
 {
+#ifdef _WIN32
     /* load the avs library */
     if( ffms_load_avs_lib( env ) )
         return "Failure";
@@ -328,6 +336,17 @@ const char *AVSC_CC avisynth_c_plugin_init( AVS_ScriptEnvironment* env )
 
     /* tell avs to call our cleanup method when it closes */
     ffms_avs_lib.avs_at_exit( env, ffms_free_avs_lib, 0 );
+#else
+    avs_add_function( env, "FFIndex", "[source]s[cachefile]s[indexmask]i[dumpmask]i[audiofile]s[errorhandling]i[overwrite]b[utf8]b", create_FFIndex, 0 );
+    avs_add_function( env, "FFVideoSource", "[source]s[track]i[cache]b[cachefile]s[fpsnum]i[fpsden]i[threads]i[timecodes]s[seekmode]i[rffmode]i[width]i[height]i[resizer]s[colorspace]s[utf8]b[varprefix]s", create_FFVideoSource, 0 );
+    avs_add_function( env, "FFAudioSource", "[source]s[track]i[cache]b[cachefile]s[adjustdelay]i[utf8]b[varprefix]s", create_FFAudioSource, 0 );
+    avs_add_function( env, "FFGetLogLevel", "", create_FFGetLogLevel, 0 );
+    avs_add_function( env, "FFSetLogLevel", "i", create_FFSetLogLevel, 0 );
+    avs_add_function( env, "FFGetVersion", "", create_FFGetVersion, 0 );
+
+    /* tell avs to call our cleanup method when it closes */
+    avs_at_exit( env, NULL, 0 );
+#endif
     return "FFmpegSource - The Second Coming V2.0 Final";
 }
 

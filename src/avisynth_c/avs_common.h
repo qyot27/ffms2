@@ -21,9 +21,13 @@
 #ifndef FFAVSCOMMON_H
 #define FFAVSCOMMON_H
 
+#ifdef _WIN32
 #include <windows.h>
 #undef EXTERN_C
 #define AVSC_NO_DECLSPEC
+#else
+#include "avs/posix.h"
+#endif
 #include "avisynth_c.h"
 #include "avs_lib.h"
 #include "avs_utils.h"
